@@ -8,11 +8,13 @@ module RackVirtualMachine
   class VMTranslationManager
     def initialize(filepath)
       parser = Parser.new(filepath)
+      translator = Translator.new(File.basename(filepath, ".*"))
       while parser.advance
+        puts "Command----"
         if parser.command_type == CommandTypes::ARITHMETIC
-          puts Translator.get_command_arithmetic(parser.arg1)
+          puts translator.get_command_arithmetic(parser.arg1)
         elsif [CommandTypes::PUSH, CommandTypes::POP].include?(parser.command_type)
-          puts Translator.get_command_push_pop(parser.command_type, parser.arg1, parser.arg2)
+          puts translator.get_command_push_pop(parser.command_type, parser.arg1, parser.arg2)
         end
       end
     end
