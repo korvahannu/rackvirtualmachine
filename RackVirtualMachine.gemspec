@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require_relative "lib/RackVirtualMachine/version"
+require_relative 'lib/RackVirtualMachine/version'
 
 Gem::Specification.new do |spec|
-  spec.name = "RackVirtualMachine"
+  spec.name = 'RackVirtualMachine'
   spec.version = RackVirtualMachine::VERSION
-  spec.authors = ["Hannu Korvala"]
-  spec.email = ["hannu.s.korvala@gmail.com"]
+  spec.authors = ['Hannu Korvala']
+  spec.email = ['hannu.s.korvala@gmail.com']
 
-  spec.summary = "Virtual Machine implementation using Ruby"
-  spec.homepage = "https://github.com/korvahannu/rackvirtualmachine"
-  spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.6.0"
+  spec.summary = 'Virtual Machine implementation using Ruby'
+  spec.homepage = 'https://github.com/korvahannu/rackvirtualmachine'
+  spec.license = 'MIT'
+  spec.required_ruby_version = '>= 2.6.0'
 
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
         f.start_with?(*%w[bin/ test/ spec/ features/ .git .circleci appveyor Gemfile])
     end
   end
-  spec.bindir = "exe"
+  spec.bindir = 'exe'
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
-  spec.require_paths = ["lib"]
+  spec.require_paths = ['lib']
 end
