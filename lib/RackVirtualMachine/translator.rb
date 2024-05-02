@@ -10,15 +10,16 @@ module RackVirtualMachine
       'that' => 'THAT',
       'temp' => 'TEMP'
     }.freeze
-    THIS_THAT = %w[THIS THAT]
+    THIS_THAT = %w[THIS THAT].freeze
 
     def initialize(filename)
       @filename = filename
-      @index = 0
+      @index = -1
     end
 
     # Gets an arithmetic command as a string and translates it to Hack assembly
     def get_command_arithmetic(command)
+      @index += 1
       if command == 'add'
         return <<~ARM
           @SP
@@ -50,26 +51,96 @@ module RackVirtualMachine
       end
       if command == 'eq'
         return <<~ARM
+          @SP
+          M=M-1
+          A=M
+          D=M
+          A=A-1
+          D=M-D
+          @EQUAL.#{@index}
+          D;JEQ
+          @SP
+          A=M-1
+          M=0
+          @END.#{@index}
+          0;JMP
+          (EQUAL.#{@index})
+          @SP
+          A=M-1
+          M=-1
+          (END.#{@index})
         ARM
       end
       if command == 'gt'
         return <<~ARM
+          @SP
+          M=M-1
+          A=M
+          D=M
+          A=A-1
+          D=M-D
+          @GREATERTHAN.#{@index}
+          D;JGT
+          @SP
+          A=M-1
+          M=0
+          @END.#{@index}
+          0;JMP
+          (GREATERTHAN.#{@index})
+          @SP
+          A=M-1
+          M=-1
+          (END.#{@index})
         ARM
       end
       if command == 'lt'
         return <<~ARM
+          @SP
+          M=M-1
+          A=M
+          D=M
+          A=A-1
+          D=M-D
+          @LESSTHAN.#{@index}
+          D;JLT
+          @SP
+          A=M-1
+          M=0
+          @END.#{@index}
+          0;JMP
+          (LESSTHAN.#{@index})
+          @SP
+          A=M-1
+          M=-1
+          (END.#{@index})
         ARM
       end
       if command == 'and'
         return <<~ARM
+          @SP
+          M=M-1
+          A=M
+          D=M
+          A=A-1
+          M=D&M
         ARM
       end
       if command == 'or'
         return <<~ARM
+          @SP
+          M=M-1
+          A=M
+          D=M
+          A=A-1
+          M=D|M
         ARM
       end
       if command == 'not'
         return <<~ARM
+          @SP
+          M=M-1
+          A=M
+          M=!M
         ARM
       end
 
@@ -79,6 +150,7 @@ module RackVirtualMachine
     # Gets a command type (push or pop), segment, and an index and translates it to Hack assembly
     # E.g. (:C_PUSH, "local", 2)
     def get_command_push_pop(command_type, segment, index)
+      @index += 1
       # pushes the value of segment[index] to the stack
       if command_type == CommandTypes::PUSH
         if segment == 'constant'
@@ -120,7 +192,7 @@ module RackVirtualMachine
         end
         if segment == 'pointer'
           return <<~PUSHCMD
-            @#{THIS_THAT[index]}
+            @#{THIS_THAT[index.to_i]}
             D=M
             @SP
             A=M
@@ -179,7 +251,7 @@ module RackVirtualMachine
             M=M-1
             A=M
             D=M
-            @#{THIS_THAT[index]}
+            @#{THIS_THAT[index.to_i]}
             M=D
           POPCMD
         end
