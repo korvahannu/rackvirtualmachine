@@ -38,7 +38,7 @@ module RackVirtualMachine
           A=M
           D=M
           A=A-1
-          D=D-M
+          D=M-D
           M=D
         ARM
       end
@@ -138,8 +138,7 @@ module RackVirtualMachine
       if command == 'not'
         return <<~ARM
           @SP
-          M=M-1
-          A=M
+          A=M-1
           M=!M
         ARM
       end
