@@ -14,12 +14,12 @@ module RackVirtualMachine
 
     def initialize(filename)
       @filename = filename
-      @index = -1
+      @command_number = 0
     end
 
     # Gets an arithmetic command as a string and translates it to Hack assembly
     def get_command_arithmetic(command)
-      @index += 1
+      @command_number += 1
       if command == 'add'
         return <<~ARM
           @SP
@@ -57,18 +57,18 @@ module RackVirtualMachine
           D=M
           A=A-1
           D=M-D
-          @EQUAL.#{@index}
+          @EQUAL.#{@command_number}
           D;JEQ
           @SP
           A=M-1
           M=0
-          @END.#{@index}
+          @END.#{@command_number}
           0;JMP
-          (EQUAL.#{@index})
+          (EQUAL.#{@command_number})
           @SP
           A=M-1
           M=-1
-          (END.#{@index})
+          (END.#{@command_number})
         ARM
       end
       if command == 'gt'
@@ -79,18 +79,18 @@ module RackVirtualMachine
           D=M
           A=A-1
           D=M-D
-          @GREATERTHAN.#{@index}
+          @GREATERTHAN.#{@command_number}
           D;JGT
           @SP
           A=M-1
           M=0
-          @END.#{@index}
+          @END.#{@command_number}
           0;JMP
-          (GREATERTHAN.#{@index})
+          (GREATERTHAN.#{@command_number})
           @SP
           A=M-1
           M=-1
-          (END.#{@index})
+          (END.#{@command_number})
         ARM
       end
       if command == 'lt'
@@ -101,18 +101,18 @@ module RackVirtualMachine
           D=M
           A=A-1
           D=M-D
-          @LESSTHAN.#{@index}
+          @LESSTHAN.#{@command_number}
           D;JLT
           @SP
           A=M-1
           M=0
-          @END.#{@index}
+          @END.#{@command_number}
           0;JMP
-          (LESSTHAN.#{@index})
+          (LESSTHAN.#{@command_number})
           @SP
           A=M-1
           M=-1
-          (END.#{@index})
+          (END.#{@command_number})
         ARM
       end
       if command == 'and'
@@ -149,7 +149,7 @@ module RackVirtualMachine
     # Gets a command type (push or pop), segment, and an index and translates it to Hack assembly
     # E.g. (:C_PUSH, "local", 2)
     def get_command_push_pop(command_type, segment, index)
-      @index += 1
+      @command_number += 1
       # pushes the value of segment[index] to the stack
       if command_type == CommandTypes::PUSH
         if segment == 'constant'
@@ -165,7 +165,7 @@ module RackVirtualMachine
         end
         if segment == 'static'
           return <<~PUSHCMD
-            @#{@filename}.#{@index}
+            @#{@filename}.#{index}
             D=M
             @SP
             A=M
@@ -191,17 +191,39 @@ module RackVirtualMachine
         end
         if segment == 'pointer'
           return <<~PUSHCMD
-            TODO
+            @3
+            D=A
+            @#{index}
+            D=D+A
+            A=D
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
           PUSHCMD
         end
         if segment == 'this'
           return <<~PUSHCMD
-            TODO
+            @THIS
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
           PUSHCMD
         end
         if segment == 'that'
           return <<~PUSHCMD
-            TODO
+            @THAT
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            M=M+1
           PUSHCMD
         end
         if segment == 'temp'
@@ -227,7 +249,7 @@ module RackVirtualMachine
             M=M-1
             A=M
             D=M
-            @#{@filename}.#{@index}
+            @#{@filename}.#{index}
             M=D
           POPCMD
         end
@@ -318,7 +340,19 @@ module RackVirtualMachine
         end
         if segment == 'pointer'
           return <<~POPCMD
-            TODO
+            @3
+            D=A
+            @#{index}
+            D=D+A
+            @R13
+            M=D
+            @SP
+            M=M-1
+            A=M
+            D=M
+            @R13
+            A=M
+            M=D
           POPCMD
         end
       end
