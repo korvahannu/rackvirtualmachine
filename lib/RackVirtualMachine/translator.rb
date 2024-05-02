@@ -177,7 +177,7 @@ module RackVirtualMachine
         if %w[local argument this that].include?(segment)
           return <<~PUSHCMD
             @#{SEGMENT_BASE_ADDRESSES[segment]}
-            D=A
+            D=M
             @#{index}
             D=D+A
             A=D
@@ -191,13 +191,17 @@ module RackVirtualMachine
         end
         if segment == 'pointer'
           return <<~PUSHCMD
-            @#{THIS_THAT[index.to_i]}
-            D=M
-            @SP
-            A=M
-            M=D
-            @SP
-            M=M+1
+            TODO
+          PUSHCMD
+        end
+        if segment == 'this'
+          return <<~PUSHCMD
+            TODO
+          PUSHCMD
+        end
+        if segment == 'that'
+          return <<~PUSHCMD
+            TODO
           PUSHCMD
         end
         if segment == 'temp'
@@ -227,10 +231,78 @@ module RackVirtualMachine
             M=D
           POPCMD
         end
-        if %w[local argument this that temp].include?(segment)
+        if segment == 'local'
           return <<~POPCMD
-            @#{SEGMENT_BASE_ADDRESSES[segment]}
+            @LCL
             D=M
+            @#{index}
+            D=D+A
+            @R13
+            M=D
+            @SP
+            M=M-1
+            A=M
+            D=M
+            @R13
+            A=M
+            M=D
+          POPCMD
+        end
+        if segment == 'argument'
+          return <<~POPCMD
+            @ARG
+            D=M
+            @#{index}
+            D=D+A
+            @R13
+            M=D
+            @SP
+            M=M-1
+            A=M
+            D=M
+            @R13
+            A=M
+            M=D
+          POPCMD
+        end
+        if segment == 'this'
+          return <<~POPCMD
+            @THIS
+            D=M
+            @#{index}
+            D=D+A
+            @R13
+            M=D
+            @SP
+            M=M-1
+            A=M
+            D=M
+            @R13
+            A=M
+            M=D
+          POPCMD
+        end
+        if segment == 'that'
+          return <<~POPCMD
+            @THAT
+            D=M
+            @#{index}
+            D=D+A
+            @R13
+            M=D
+            @SP
+            M=M-1
+            A=M
+            D=M
+            @R13
+            A=M
+            M=D
+          POPCMD
+        end
+        if segment == 'temp'
+          return <<~POPCMD
+            @5
+            D=A
             @#{index}
             D=D+A
             @R13
@@ -246,12 +318,7 @@ module RackVirtualMachine
         end
         if segment == 'pointer'
           return <<~POPCMD
-            @SP
-            M=M-1
-            A=M
-            D=M
-            @#{THIS_THAT[index.to_i]}
-            M=D
+            TODO
           POPCMD
         end
       end
