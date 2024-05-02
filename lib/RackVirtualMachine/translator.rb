@@ -17,6 +17,16 @@ module RackVirtualMachine
       @command_number = 0
     end
 
+    def translate(command)
+      if command[:type] == CommandTypes::ARITHMETIC
+        return get_command_arithmetic(command[:arg1])
+      elsif [CommandTypes::PUSH, CommandTypes::POP].include?(command[:type])
+        return get_command_push_pop(command[:type], command[:arg1], command[:arg2])
+      end
+
+      raise 'Unsupported command type'
+    end
+
     # Gets an arithmetic command as a string and translates it to Hack assembly
     def get_command_arithmetic(command)
       @command_number += 1

@@ -40,7 +40,7 @@ module RackVirtualMachine
     end
 
     def arg1
-      raise "Should not be called with command type #{command_type}" if command_type == CommandTypes::RETURN
+      return nil if command_type == CommandTypes::RETURN
 
       return @command[0] if command_type == CommandTypes::ARITHMETIC
 
@@ -49,10 +49,18 @@ module RackVirtualMachine
 
     def arg2
       unless [CommandTypes::PUSH, CommandTypes::POP, CommandTypes::FUNCTION, CommandTypes::CALL].include?(command_type)
-        raise "Should not be called with command type #{command_type}"
+        return nil
       end
 
       @command[2]
+    end
+
+    def command
+      {
+        type: command_type,
+        arg1: arg1,
+        arg2: arg2
+      }
     end
 
     def rewind
