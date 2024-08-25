@@ -7,7 +7,7 @@ require_relative 'RackVirtualMachine/vm_translation_manager'
 module RackVirtualMachine
   filepath = ARGV[0]
   raise 'Please provide a filepath' if filepath.nil? || filepath.empty?
-  raise 'Invalid filepath: Input file does not exist' unless File.exist?(filepath)
+  raise 'Invalid filepath: Input file or directory does not exist' unless File.exist?(filepath)
 
   VMTranslationManager.new(filepath).translate
 end

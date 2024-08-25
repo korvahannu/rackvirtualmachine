@@ -6,11 +6,10 @@ require_relative('translator')
 module RackVirtualMachine
   # Manages the translation process from Hack bytecode to Hack assembly
   class VMTranslationManager
-    def initialize(filepath, outputpath: nil)
+    def initialize(filepath, output_path: nil)
       @filepath = filepath
       @translator = Translator.new
-      @outputpath = outputpath unless outputpath.nil?
-      derivate_output_file_name(filepath) if outputpath.nil?
+      setup_output_path(filepath, output_path)
     end
 
     def translate
@@ -28,32 +27,52 @@ module RackVirtualMachine
     end
 
     def translate_files(files, is_directory: true)
-      File.open(@outputpath, 'w') do |output_file|
+      raise 'Output path not defined, something went horribly wrong!' if @output_path == nil
+
+      File.open(@output_path, 'w') do |output_file|
         files.each do |file|
-          @translator.filename = get_file_name_for_translator(file)
-          parser = Parser.new("#{@filepath}#{file}") if is_directory
-          parser = Parser.new(file) unless is_directory
+          @translator.filename = get_file_basename(file)
+          parser = get_parser(file, is_directory)
           output_file.puts @translator.translate(parser.command) while parser.advance
         end
       end
     end
 
-    def get_files_to_compile(filepath)
-      Dir.entries(filepath)
-        .select { |f| f.end_with?(".vm")}
-        .select { |f| File.file?("#{@filepath}#{f}") }
+    def get_parser(file, is_directory)
+      if is_directory
+        Parser.new("#{@filepath}#{file}")
+      else
+        Parser.new(file)
+      end
     end
 
-    def get_file_name_for_translator(filepath)
+    def get_files_to_compile(filepath)
+      Dir.entries(filepath)
+         .select { |f| f.end_with?(".vm") }
+         .select { |f| File.file?("#{@filepath}#{f}") }
+    end
+
+    def get_file_basename(filepath)
       File.basename(filepath, '.*')
     end
 
-    def derivate_output_file_name(filepath)
-      if File.file?(filepath)
-        @outputpath = "#{get_file_name_for_translator(filepath)}.asm"
+    def setup_output_path(filepath, output_path)
+      if @output_path.nil?
+        derive_output_file_name(filepath)
       else
-        @outputpath = "#{filepath.split('/').last}.asm"
+        @output_path = output_path
       end
+    end
+
+    def derive_output_file_name(filepath)
+      basename = get_file_basename(filepath)
+      if File.file?(filepath)
+        @output_path = "#{basename}.asm"
+      else
+        @output_path = "#{filepath.split('/').last}#{basename.capitalize}.asm"
+      end
+
+      puts @output_path
     end
   end
 end
