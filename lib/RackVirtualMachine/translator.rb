@@ -3,6 +3,8 @@
 module RackVirtualMachine
   # Translates a parsed VM command into Hack assembly code
   class Translator
+    attr_accessor :filename
+
     SEGMENT_BASE_ADDRESSES = {
       'local' => 'LCL',
       'argument' => 'ARG',
@@ -12,8 +14,8 @@ module RackVirtualMachine
     }.freeze
     THIS_THAT = %w[THIS THAT].freeze
 
-    def initialize(filename)
-      @filename = filename
+    def initialize
+      @filename = nil
       @command_number = 0
     end
 
@@ -25,6 +27,10 @@ module RackVirtualMachine
       end
 
       raise 'Unsupported command type'
+    end
+
+    # Signals the translator that a new file is being read. This is used to unique-fy function names
+    def signal_new_file(file_name)
     end
 
     # Gets an arithmetic command as a string and translates it to Hack assembly
@@ -367,6 +373,28 @@ module RackVirtualMachine
         end
       end
       raise "Unknown push/pop command. Type: #{command}, segment: #{segment}, index: #{index}"
+    end
+
+    # Gets the necessary bootstrap
+    def finalize_and_bootstrap
+    end
+
+    def get_command_label(label)
+    end
+
+    def get_command_goto(label)
+    end
+
+    def get_command_if(label)
+    end
+
+    def get_command_function(name, number_of_args)
+    end
+
+    def get_command_call(function_name, number_of_args)
+    end
+
+    def get_command_return
     end
   end
 end
