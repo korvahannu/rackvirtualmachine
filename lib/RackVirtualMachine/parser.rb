@@ -35,6 +35,9 @@ module RackVirtualMachine
       return CommandTypes::ARITHMETIC if VM_ARITHMETIC_COMMANDS.include?(@command[0])
       return CommandTypes::PUSH if @command[0] == 'push'
       return CommandTypes::POP if @command[0] == 'pop'
+      return CommandTypes::LABEL if @command[0] == 'label'
+      return CommandTypes::GOTO if @command[0] == 'goto'
+      return CommandTypes::IF if @command[0] == 'if-goto'
 
       raise "Unsupported VM command: #{@command[0].inspect}"
     end

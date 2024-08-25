@@ -24,6 +24,12 @@ module RackVirtualMachine
         return get_command_arithmetic(command[:arg1])
       elsif [CommandTypes::PUSH, CommandTypes::POP].include?(command[:type])
         return get_command_push_pop(command[:type], command[:arg1], command[:arg2])
+      elsif command[:type] == CommandTypes::LABEL
+        return get_command_label(command[:arg1])
+      elsif command[:type] == CommandTypes::GOTO
+        return get_command_goto(command[:arg1])
+      elsif command[:type] == CommandTypes::IF
+        return get_command_if(command[:arg1])
       end
 
       raise 'Unsupported command type'
@@ -380,12 +386,26 @@ module RackVirtualMachine
     end
 
     def get_command_label(label)
+      "(#{label})"
     end
 
     def get_command_goto(label)
+      <<~GOTO
+      @#{label}
+      0;JMP
+      GOTO
     end
 
+    # if the topmost value in stack is not 0, jump, otherwise continue
     def get_command_if(label)
+      <<~IFGOTO
+      @SP
+      M=M-1
+      A=M
+      D=M
+      @#{label}
+      D;JNE
+      IFGOTO
     end
 
     def get_command_function(name, number_of_args)
