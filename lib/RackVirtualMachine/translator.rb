@@ -20,19 +20,24 @@ module RackVirtualMachine
     end
 
     def translate(command)
-      if command[:type] == CommandTypes::ARITHMETIC
-        return get_command_arithmetic(command[:arg1])
-      elsif [CommandTypes::PUSH, CommandTypes::POP].include?(command[:type])
-        return get_command_push_pop(command[:type], command[:arg1], command[:arg2])
-      elsif command[:type] == CommandTypes::LABEL
-        return get_command_label(command[:arg1])
-      elsif command[:type] == CommandTypes::GOTO
-        return get_command_goto(command[:arg1])
-      elsif command[:type] == CommandTypes::IF
-        return get_command_if(command[:arg1])
-      end
+      type = command[:type]
+      arg1 = command[:arg1]
+      arg2 = command[:arg2]
 
-      raise 'Unsupported command type'
+      case type
+      when CommandTypes::ARITHMETIC
+        get_command_arithmetic(arg1)
+      when CommandTypes::PUSH, CommandTypes::POP
+        get_command_push_pop(type, arg1, arg2)
+      when  CommandTypes::LABEL
+        get_command_label(arg1)
+      when CommandTypes::GOTO
+        get_command_goto(arg1)
+      when CommandTypes::IF
+        get_command_if(arg1)
+      else
+        raise 'Unsupported command type'
+      end
     end
 
     # Signals the translator that a new file is being read. This is used to unique-fy function names
