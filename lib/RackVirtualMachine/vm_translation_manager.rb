@@ -30,6 +30,7 @@ module RackVirtualMachine
       raise 'Output path not defined, something went horribly wrong!' if @output_path == nil
 
       File.open(@output_path, 'w') do |output_file|
+        output_file.puts @translator.bootstrap
         files.each do |file|
           @translator.filename = get_file_basename(file)
           parser = get_parser(file, is_directory)
@@ -69,7 +70,7 @@ module RackVirtualMachine
       if File.file?(filepath)
         @output_path = "#{basename}.asm"
       else
-        @output_path = "#{filepath.split('/').last}#{basename.capitalize}.asm"
+        @output_path = "#{basename.capitalize}.asm"
       end
 
       puts @output_path

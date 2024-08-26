@@ -21,10 +21,12 @@ module RackVirtualMachine
 
     def advance
       line = try_readline
+
       if line.nil?
         rewind
         return false
       end
+
       @current_line_number += 1
       @current_line = line
       @command = line.split(' ')
@@ -38,13 +40,15 @@ module RackVirtualMachine
       return CommandTypes::LABEL if @command[0] == 'label'
       return CommandTypes::GOTO if @command[0] == 'goto'
       return CommandTypes::IF if @command[0] == 'if-goto'
+      return CommandTypes::FUNCTION if @command[0] == 'function'
+      return CommandTypes::RETURN if @command[0] == 'return'
+      return CommandTypes::CALL if @command[0] == 'call'
 
       raise "Unsupported VM command: #{@command[0].inspect}"
     end
 
     def arg1
       return nil if command_type == CommandTypes::RETURN
-
       return @command[0] if command_type == CommandTypes::ARITHMETIC
 
       @command[1]
@@ -78,6 +82,7 @@ module RackVirtualMachine
 
     def try_readline
       line = nil
+      
       while line.nil? || line.start_with?('//') || line.empty?
         begin
           line = @file.readline.chomp.strip
@@ -86,6 +91,7 @@ module RackVirtualMachine
         end
         @current_lines_read += 1
       end
+
       line
     end
   end

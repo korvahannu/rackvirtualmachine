@@ -17,6 +17,7 @@ module RackVirtualMachine
     def initialize
       @filename = nil
       @command_number = 0
+      @return_label = 0
     end
 
     def translate(command)
@@ -35,13 +36,25 @@ module RackVirtualMachine
         get_command_goto(arg1)
       when CommandTypes::IF
         get_command_if(arg1)
+      when CommandTypes::FUNCTION
+        get_command_function(arg1, arg2)
+      when CommandTypes::RETURN
+        get_command_return
+      when CommandTypes::CALL
+        get_command_call(arg1, arg2)
       else
         raise 'Unsupported command type'
       end
     end
 
-    # Signals the translator that a new file is being read. This is used to unique-fy function names
-    def signal_new_file(file_name)
+    def bootstrap
+      <<~BOOTSTRAP
+      @256
+      D=A
+      @SP
+      M=D
+      #{get_command_call('Sys.init', 0)}
+      BOOTSTRAP
     end
 
     # Gets an arithmetic command as a string and translates it to Hack assembly
@@ -413,13 +426,137 @@ module RackVirtualMachine
       IFGOTO
     end
 
-    def get_command_function(name, number_of_args)
-    end
+    def get_command_function(function_name, number_of_args)
+      arg_count = Integer(number_of_args)
+      result = "(#{function_name})"
+      result << "\n" if arg_count > 0
 
-    def get_command_call(function_name, number_of_args)
+     arg_count.times do |i|
+        result << <<~EOS
+        @SP
+        A=M
+        M=0
+        @SP
+        M=M+1
+        EOS
+      end
+
+      result
     end
 
     def get_command_return
+      <<~RETURN
+      @LCL
+      D=M
+      @frame // sets frame to LCL
+      M=D
+      @5
+      D=D-A
+      A=D
+      D=M
+      @returnaddress
+      M=D // saves return address to @returnaddress
+      @SP
+      M=M-1
+      A=M
+      D=M // D = return value
+      @ARG
+      A=M
+      M=D // sets the return value to ARG
+      @ARG
+      D=M+1
+      @SP
+      M=D // sets stack pointer to arg + 1
+      @frame
+      D=M
+      @1
+      D=D-A
+      A=D
+      D=M
+      @THAT
+      M=D // restore THAT
+      @frame
+      D=M
+      @2
+      D=D-A
+      A=D
+      D=M
+      @THIS
+      M=D // restore THIS
+      @frame
+      D=M
+      @3
+      D=D-A
+      A=D
+      D=M
+      @ARG
+      M=D // restores ARG
+      @frame
+      D=M
+      @4
+      D=D-A
+      A=D
+      D=M
+      @LCL
+      M=D // restores LCL
+      @returnaddress
+      A=M
+      0;JMP
+      RETURN
+    end
+
+    def get_command_call(function_name, number_of_args)
+      label = "RETURN$#{@return_label = @return_label + 1}"
+      <<~CALL
+      @#{label}
+      D=A
+      @SP
+      A=M
+      M=D // push return address
+      @SP
+      M=M+1
+      @LCL
+      D=M
+      @SP
+      A=M
+      M=D // push LCL
+      @SP
+      M=M+1
+      @ARG
+      D=M
+      @SP
+      A=M
+      M=D // push ARG
+      @SP
+      M=M+1
+      @THIS
+      D=M
+      @SP
+      A=M
+      M=D // push THIS
+      @SP
+      M=M+1
+      @THAT
+      D=M
+      @SP
+      A=M
+      M=D // push THAT
+      @SP
+      M=M+1
+      @SP
+      D=M
+      @#{5+Integer(number_of_args)}
+      D=D-A
+      @ARG
+      M=D // reposition ARG
+      @SP
+      D=M
+      @LCL
+      M=D // reposition LCL
+      @#{function_name}
+      0;JMP // jump to function execution
+      (#{label}) // write return address label
+      CALL
     end
   end
 end
